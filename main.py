@@ -28,6 +28,13 @@ def initialize_bot():
     send_to_telegram('Trading Bot initialized')
 
 def main():
+    
+    if(len(sys.argv) > 1):
+        if("debug".lower() == sys.argv[1].lower()):
+            print("DEBUG ON")
+            gvarlist.debugOn = True
+            gvarlist.endTime = dt.time(23, 50)
+
 
     # initialize the logger (imported from logger)
     initialize_logger()

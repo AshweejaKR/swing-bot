@@ -1,5 +1,6 @@
 import datetime as dt
 
+debugOn = False
 instrument_list = None
 client_id = None
 api = None

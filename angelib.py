@@ -145,9 +145,10 @@ def hist_data(ticker, exchange = "NSE"):
     return df_data
 
 def get_current_price(ticker, exchange = 'NSE'):
-    # Only For Test
-    ltp = float(input("Enter LTP:\n"))
-    return ltp
+    # Only For Test/Debug
+    if(gvarlist.debugOn):
+        ltp = float(input("Enter LTP:\n"))
+        return ltp
     # End Test
 
     time.sleep(gvarlist.sleepTime)
