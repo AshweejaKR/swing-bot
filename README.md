@@ -1,2 +1,2 @@
 # swing-bot
- swing trading bot using Angle One' broker python SDK
+ swing trading for NIFTYBEES using Angel One's Smart API python SDK
