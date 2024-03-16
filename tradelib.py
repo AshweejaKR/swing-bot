@@ -32,7 +32,7 @@ class Trader():
         self.prevPrice = max(stock_data.iloc[-1]['close'], stock_data.iloc[-2]['close'])
 
         self.cur_price = get_current_price(self.ticker)
-        self.sharesQty = int(5000.00 / self.cur_price)
+        self.sharesQty = int(gvarlist.amountPerTrade / self.cur_price)
 
         lg.info('Trade is initialized with ticker %s ...!!' % (self.ticker))
         lg.info("Current price of {} is {} and Trading Qty {}".format(self.ticker, self.cur_price, self.sharesQty))
@@ -48,10 +48,19 @@ class Trader():
             print("self.target = {} <= self.cur_price = {} ... ".format(self.target, self.cur_price))
             if(self.cur_price > self.target):
                 buy_sell = "SELL"
-                lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
-                send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
-                data_list.remove(data_list[-1])
-   
+                orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
+                count = 0
+                while (get_oder_status(orderID) == 'open'):
+                    lg.info('Buy order is in open, waiting ... %d ' % (count))
+                status = get_oder_status(orderID)
+                if(status == 'completed'):
+                    lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
+                    send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
+                    data_list.remove(data_list[-1])
+                else:
+                    lg.error('Sell order NOT submitted, aborting trade!')
+                    send_to_telegram('Sell order NOT submitted, aborting trade!')
+    
     def run(self):
         global data_list
         data_list = read_from_json()
@@ -69,7 +78,7 @@ class Trader():
                     break
 
                 self.cur_price = get_current_price(self.ticker)
-                self.sharesQty = int(5000.00 / self.cur_price)
+                self.sharesQty = int(gvarlist.amountPerTrade / self.cur_price)
 
                 temp = (0.995 * self.prevPrice)
                 if(self.cur_price <= gvarlist.buy_p * self.prevPrice):
@@ -77,12 +86,19 @@ class Trader():
                     orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
                     self.target = (gvarlist.sell_p * self.cur_price)
                     # self.stoploss = 10.00 #(0.995 * self.cur_price)
-                    buy_data = {"buy_price" : self.cur_price, "orderID" : orderID, "quantity" : self.sharesQty, "target_price" : self.target}
-                    data_list.append(buy_data)
-                    self.prevPrice = self.cur_price
-                    lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
-                    send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
-
+                    count = 0
+                    while (get_oder_status(orderID) == 'open'):
+                        lg.info('Buy order is in open, waiting ... %d ' % (count))
+                    status = get_oder_status(orderID)
+                    if(status == 'completed'):
+                        buy_data = {"buy_price" : self.cur_price, "orderID" : orderID, "quantity" : self.sharesQty, "target_price" : self.target}
+                        data_list.append(buy_data)
+                        self.prevPrice = self.cur_price
+                        lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
+                        send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
+                    else:
+                        lg.error('Buy order NOT submitted, aborting trade!')
+                        send_to_telegram('Buy order NOT submitted, aborting trade!')
                 self.exit_pos()
         except Exception as err:
             write_to_json(data_list)

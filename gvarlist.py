@@ -14,7 +14,7 @@ ltp = 0.0
 
 buy_p = 0.9939
 sell_p = 1.011
-
+amountPerTrade = 1000.00
 
 data_list = []
 filename = "position_data.json"

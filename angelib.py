@@ -100,10 +100,11 @@ def submit_order(ticker, sharesQty, buy_sell, exchange = 'NSE'):
     
 def get_oder_status(orderID):
     status = 'NA'
-    # For Test
-    # return 'completed'
-    # End test
-    
+    # Only For Test/Debug
+    if(gvarlist.debugOn):
+        return 'completed'
+    # End Test
+
     time.sleep(gvarlist.sleepTime)
     order_history_response = gvarlist.api.orderBook()  
     try:
