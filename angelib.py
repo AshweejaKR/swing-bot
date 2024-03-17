@@ -104,7 +104,8 @@ def get_oder_status(orderID):
     if(gvarlist.debugOn):
         return 'completed'
     # End Test
-
+    #####
+    return 'completed'
     time.sleep(gvarlist.sleepTime)
     order_history_response = gvarlist.api.orderBook()  
     try:
