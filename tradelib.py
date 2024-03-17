@@ -29,7 +29,6 @@ class Trader():
 
         stock_data = hist_data(self.ticker)
         self.prevPrice = max(stock_data.iloc[-1]['close'], stock_data.iloc[-2]['close'])
-        self.prevPrice = 1025.00
 
         self.cur_price = get_current_price(self.ticker)
         self.sharesQty = int(gvarlist.amountPerTrade / self.cur_price)
@@ -59,14 +58,15 @@ class Trader():
             temp['trigger_price'] = self.triggerTSL
             temp['stoploss_price'] = self.stoploss
 
-            lg.debug("\n-----------------------------------------")
-            lg.debug("self.cur_price: {} ".format(self.cur_price))
-            lg.debug("self.target: {} ".format(self.target))
-            lg.debug("self.stoploss: {} ".format(self.stoploss))
-            lg.debug("self.triggerTSL: {} ".format(self.triggerTSL))
-            lg.debug("-----------------------------------------\n\n")
+            if((gvarlist.count % 20) == 0):
+                lg.debug("\n-----------------------------------------")
+                lg.debug("self.cur_price: {} ".format(self.cur_price))
+                lg.debug("self.target: {} ".format(self.target))
+                lg.debug("self.stoploss: {} ".format(self.stoploss))
+                lg.debug("self.triggerTSL: {} ".format(self.triggerTSL))
+                lg.debug("-----------------------------------------\n\n")
 
-            lg.info('SL %.2f <-- %.2f --> %.2f TP' % (self.stoploss, self.cur_price, self.target))
+                lg.info('SL %.2f <-- %.2f --> %.2f TP' % (self.stoploss, self.cur_price, self.target))
             if((self.cur_price > self.target) or (self.cur_price < self.stoploss)):
                 buy_sell = "SELL"
                 #####
@@ -92,8 +92,11 @@ class Trader():
 
         try:
             while True:
-                lg.info('Running trade for %s ... !' % (self.ticker))
-                lg.info("self.cur_price = {} <= (gvarlist.buy_p * self.prevPrice) = {} ... ".format(self.cur_price, (gvarlist.buy_p * self.prevPrice)))
+                time.sleep(gvarlist.sleepTime)
+                gvarlist.count += 1
+                if((gvarlist.count % 20) == 0):
+                    lg.info('Running trade for %s ... !' % (self.ticker))
+                    lg.info("self.cur_price = {} <= (gvarlist.buy_p * self.prevPrice) = {} ... ".format(self.cur_price, (gvarlist.buy_p * self.prevPrice)))
 
                 cur_time = dt.datetime.now(pytz.timezone("Asia/Kolkata")).time()
                 if(cur_time < gvarlist.startTime or cur_time > gvarlist.endTime):
