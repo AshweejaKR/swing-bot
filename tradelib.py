@@ -26,7 +26,7 @@ class Trader():
     def __init__(self, ticker):
         self.ticker = ticker
         self.prevPrice = 0.0
-        gvarlist.position_datafile = ticker + "_position_data"
+        gvarlist.position_datafile = ticker + "_position_data.json"
         self.fstr_data = ''
 
         stock_data = hist_data(self.ticker)
@@ -60,7 +60,11 @@ class Trader():
             temp['trigger_price'] = self.triggerTSL
             temp['stoploss_price'] = self.stoploss
 
-            if((gvarlist.count % 300) == 0):
+            if(gvarlist.debugOn):
+                debug_c = 1
+            else:
+                debug_c = 300
+            if((gvarlist.count % debug_c) == 0):
                 lg.debug("\n-----------------------------------------")
                 lg.debug("self.cur_price: {} ".format(self.cur_price))
                 lg.debug("self.target: {} ".format(self.target))
@@ -71,9 +75,7 @@ class Trader():
                 lg.info('SL %.2f <-- %.2f --> %.2f TP' % (self.stoploss, self.cur_price, self.target))
             if((self.cur_price > self.target) or (self.cur_price < self.stoploss)):
                 buy_sell = "SELL"
-                #####
                 orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
-                # orderID = 'orderID'
                 count = 0
                 while (get_oder_status(orderID) == 'open'):
                     lg.info('Buy order is in open, waiting ... %d ' % (count))
@@ -82,7 +84,8 @@ class Trader():
                     lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
                     send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
                     data_list.remove(data_list[-1])
-                    self.fstr_data = self.fstr_data + 'DATE' + ',' +  buy_sell + ',' + str(self.sharesQty) + ',' + str(self.cur_price) + '\n'
+                    trade_time = dt.datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
+                    self.fstr_data = self.fstr_data + trade_time + ',' +  buy_sell + ',' + str(self.sharesQty) + ',' + str(self.cur_price) + '\n'
                 else:
                     lg.error('Sell order NOT submitted, aborting trade!')
                     send_to_telegram('Sell order NOT submitted, aborting trade!')
@@ -90,13 +93,15 @@ class Trader():
     
     def report(self):
         fstr_heading = 'Date,Order Type,Quantity,Price\n'
+        lg.debug(fstr_heading)
+        lg.debug(self.fstr_data)
         try:
             with open('report.csv', 'a') as csv:
                 csv.write(fstr_heading)
                 csv.write(self.fstr_data)
                 csv.close()
         except Exception as err:
-            print(err)
+            lg.error('ERROR: {}'.format(err))
 
     def run(self):
         global data_list
@@ -108,7 +113,11 @@ class Trader():
             while True:
                 time.sleep(gvarlist.sleepTime)
                 gvarlist.count += 1
-                if((gvarlist.count % 300) == 0):
+                if(gvarlist.debugOn):
+                    debug_c = 1
+                else:
+                    debug_c = 300
+                if((gvarlist.count % debug_c) == 0):
                     lg.info('Running trade for %s ... !' % (self.ticker))
                     lg.info("self.cur_price = {} <= (gvarlist.buy_p * self.prevPrice) = {} ... ".format(self.cur_price, (gvarlist.buy_p * self.prevPrice)))
 
@@ -123,9 +132,7 @@ class Trader():
 
                 if(self.cur_price <= gvarlist.buy_p * self.prevPrice):
                     buy_sell = 'BUY'
-                    #####
                     orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
-                    # orderID = 'orderID'
                     self.target = (gvarlist.sell_p * self.cur_price)
                     self.stoploss = 10.00 #(0.995 * self.cur_price)
                     self.triggerTSL = (gvarlist.tsl_P * self.cur_price)
@@ -139,7 +146,8 @@ class Trader():
                         self.prevPrice = self.cur_price
                         lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
                         send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
-                        self.fstr_data = self.fstr_data + 'DATE' + ',' +  buy_sell + ',' + str(self.sharesQty) + ',' + str(self.cur_price) + '\n'
+                        trade_time = dt.datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
+                        self.fstr_data = self.fstr_data + trade_time + ',' +  buy_sell + ',' + str(self.sharesQty) + ',' + str(self.cur_price) + '\n'
                     else:
                         lg.error('Buy order NOT submitted, aborting trade!')
                         send_to_telegram('Buy order NOT submitted, aborting trade!')
