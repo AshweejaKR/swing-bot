@@ -79,14 +79,14 @@ def submit_order(ticker, sharesQty, buy_sell, exchange = 'NSE'):
                     "transactiontype" : buy_sell,
                     "exchange" : exchange,
                     "ordertype" : "MARKET",
-                    "producttype" : "CARRYFORWARD",
+                    "producttype" : "DELIVERY",
                     "duration" : "DAY",
                     "quantity" : sharesQty
                     }
         
-        lg.info('params: %s ' % params)
+        lg.debug('params: %s ' % params)
         orderID = gvarlist.api.placeOrder(params)
-        lg.info('orderID: %s ' % orderID)
+        lg.debug('orderID: %s ' % orderID)
     except Exception as err:
         template = "An exception of type {0} occurred. error message:{1!r}"
         message = template.format(type(err).__name__, err.args)
@@ -105,7 +105,7 @@ def get_oder_status(orderID):
         return 'completed'
     # End Test
     #####
-    return 'completed'
+    # return 'completed'
     time.sleep(gvarlist.sleepTime)
     order_history_response = gvarlist.api.orderBook()  
     try:
@@ -154,6 +154,7 @@ def get_current_price(ticker, exchange = 'NSE'):
     # End Test
 
     time.sleep(gvarlist.sleepTime)
+    # return 250.00
     data = "NO DATA RECEIVED"
     try:
         data = gvarlist.api.ltpData(exchange = exchange, tradingsymbol = ticker, symboltoken = token_lookup(ticker))

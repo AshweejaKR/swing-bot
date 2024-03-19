@@ -9,14 +9,14 @@ import gvarlist
 
 # Function to write data to a JSON file
 def write_to_json(data):
-    with open(gvarlist.filename, 'w') as json_file:
+    with open(gvarlist.position_datafile, 'w') as json_file:
         json.dump(data, json_file, indent=4)
 
 # Function to read data from a JSON file
 def read_from_json():
     data = []
     try:
-        with open(gvarlist.filename, 'r') as json_file:
+        with open(gvarlist.position_datafile, 'r') as json_file:
             data = json.load(json_file)
     except Exception as err:
         pass
@@ -26,6 +26,8 @@ class Trader():
     def __init__(self, ticker):
         self.ticker = ticker
         self.prevPrice = 0.0
+        gvarlist.position_datafile = ticker + "_position_data"
+        self.fstr_data = ''
 
         stock_data = hist_data(self.ticker)
         self.prevPrice = max(stock_data.iloc[-1]['close'], stock_data.iloc[-2]['close'])
@@ -58,7 +60,7 @@ class Trader():
             temp['trigger_price'] = self.triggerTSL
             temp['stoploss_price'] = self.stoploss
 
-            if((gvarlist.count % 20) == 0):
+            if((gvarlist.count % 300) == 0):
                 lg.debug("\n-----------------------------------------")
                 lg.debug("self.cur_price: {} ".format(self.cur_price))
                 lg.debug("self.target: {} ".format(self.target))
@@ -70,8 +72,8 @@ class Trader():
             if((self.cur_price > self.target) or (self.cur_price < self.stoploss)):
                 buy_sell = "SELL"
                 #####
-                # orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
-                orderID = 'orderID'
+                orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
+                # orderID = 'orderID'
                 count = 0
                 while (get_oder_status(orderID) == 'open'):
                     lg.info('Buy order is in open, waiting ... %d ' % (count))
@@ -80,21 +82,33 @@ class Trader():
                     lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
                     send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
                     data_list.remove(data_list[-1])
+                    self.fstr_data = self.fstr_data + 'DATE' + ',' +  buy_sell + ',' + str(self.sharesQty) + ',' + str(self.cur_price) + '\n'
                 else:
                     lg.error('Sell order NOT submitted, aborting trade!')
                     send_to_telegram('Sell order NOT submitted, aborting trade!')
             write_to_json(data_list)
     
+    def report(self):
+        fstr_heading = 'Date,Order Type,Quantity,Price\n'
+        try:
+            with open('report.csv', 'a') as csv:
+                csv.write(fstr_heading)
+                csv.write(self.fstr_data)
+                csv.close()
+        except Exception as err:
+            print(err)
+
     def run(self):
         global data_list
         data_list = read_from_json()
         success = True
 
+        gvarlist.count = 0
         try:
             while True:
                 time.sleep(gvarlist.sleepTime)
                 gvarlist.count += 1
-                if((gvarlist.count % 20) == 0):
+                if((gvarlist.count % 300) == 0):
                     lg.info('Running trade for %s ... !' % (self.ticker))
                     lg.info("self.cur_price = {} <= (gvarlist.buy_p * self.prevPrice) = {} ... ".format(self.cur_price, (gvarlist.buy_p * self.prevPrice)))
 
@@ -110,8 +124,8 @@ class Trader():
                 if(self.cur_price <= gvarlist.buy_p * self.prevPrice):
                     buy_sell = 'BUY'
                     #####
-                    # orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
-                    orderID = 'orderID'
+                    orderID = submit_order(self.ticker, self.sharesQty, buy_sell)
+                    # orderID = 'orderID'
                     self.target = (gvarlist.sell_p * self.cur_price)
                     self.stoploss = 10.00 #(0.995 * self.cur_price)
                     self.triggerTSL = (gvarlist.tsl_P * self.cur_price)
@@ -125,6 +139,7 @@ class Trader():
                         self.prevPrice = self.cur_price
                         lg.info('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
                         send_to_telegram('Submitting {} Order for {}, Qty = {} at price: {}'.format(buy_sell, self.ticker, self.sharesQty, self.cur_price))
+                        self.fstr_data = self.fstr_data + 'DATE' + ',' +  buy_sell + ',' + str(self.sharesQty) + ',' + str(self.cur_price) + '\n'
                     else:
                         lg.error('Buy order NOT submitted, aborting trade!')
                         send_to_telegram('Buy order NOT submitted, aborting trade!')

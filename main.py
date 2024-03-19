@@ -46,17 +46,21 @@ def main():
 
     ticker = "NIFTYBEES-EQ"
     ltp = 0.0
-    # while ltp <= 1111.0:
+    gvarlist.count = 0
     while ltp <= 1.0:
+        gvarlist.count += 1
         ltp = get_current_price(ticker)
-        # lg.info("Current price of {} is {} ... \n".format(ticker, ltp))
+        if((gvarlist.count % 300) == 0):
+            lg.info("Current price of {} is {} ... \n".format(ticker, ltp))
 
     cur_time = dt.datetime.now(pytz.timezone("Asia/Kolkata")).time()
     if(cur_time > gvarlist.waitTime and cur_time < gvarlist.startTime):
         lg.info("Market is NOT opened waiting ... !")
         time.sleep(gvarlist.sleepTime)
 
+    gvarlist.count = 0
     while True:
+        gvarlist.count += 1
         cur_time = dt.datetime.now(pytz.timezone("Asia/Kolkata")).time()
         if(cur_time > gvarlist.endTime):
             lg.info('Market is closed. \n')
@@ -67,17 +71,18 @@ def main():
         if(cur_time > gvarlist.startTime):
             break
 
-        lg.info("Market is NOT opened waiting ... !")
+        if((gvarlist.count % 300) == 0):
+            lg.info("Market is NOT opened waiting ... !")
         time.sleep(gvarlist.sleepTime)
         
     lg.info("Current price of {} is {} ... \n".format(ticker, ltp))
 
     obj = Trader(ticker)
     success = obj.run()
+    obj.report()
 
     logout()
 
-    success = True
     if not success:
         lg.info('Trading was not successful, locking asset')
         send_to_telegram('Trading was not successful, locking asset')
