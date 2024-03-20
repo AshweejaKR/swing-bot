@@ -8,6 +8,7 @@ waitTime = dt.time(8, 59)
 startTime = dt.time(9, 16)
 endTime = dt.time(15, 16)
 sleepTime = 0.5
+ratelimitsleepTime = 1
 ltp = 0.0
 count = 0
 data_list = []

@@ -106,7 +106,7 @@ def get_oder_status(orderID):
     # End Test
     #####
     # return 'completed'
-    time.sleep(gvarlist.sleepTime)
+    time.sleep(gvarlist.ratelimitsleepTime)
     order_history_response = gvarlist.api.orderBook()  
     try:
         for i in order_history_response['data']:
@@ -153,7 +153,7 @@ def get_current_price(ticker, exchange = 'NSE'):
         return ltp
     # End Test
 
-    time.sleep(gvarlist.sleepTime)
+    time.sleep(gvarlist.ratelimitsleepTime)
     # return 250.00
     data = "NO DATA RECEIVED"
     try:
@@ -175,6 +175,3 @@ def get_current_price(ticker, exchange = 'NSE'):
         ltp = gvarlist.ltp
 
     return ltp
-
-def get_shares_amount(cur_price):
-    return 1
