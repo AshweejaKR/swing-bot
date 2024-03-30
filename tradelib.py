@@ -95,8 +95,15 @@ class Trader():
         fstr_heading = 'Date,Order Type,Quantity,Price\n'
         lg.debug(fstr_heading)
         lg.debug(self.fstr_data)
+
+        reports_path = './reports/'
         try:
-            with open('report.csv', 'a') as csv:
+            os.mkdir(reports_path)
+        except Exception:
+            pass
+
+        try:
+            with open('reports/report.csv', 'a') as csv:
                 csv.write(fstr_heading)
                 csv.write(self.fstr_data)
                 csv.close()
