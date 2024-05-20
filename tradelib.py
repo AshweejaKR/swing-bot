@@ -63,7 +63,7 @@ class Trader():
             if(gvarlist.debugOn):
                 debug_c = 1
             else:
-                debug_c = 300
+                debug_c = 3
             if((gvarlist.count % debug_c) == 0):
                 lg.debug("\n-----------------------------------------")
                 lg.debug("self.cur_price: {} ".format(self.cur_price))
@@ -123,7 +123,7 @@ class Trader():
                 if(gvarlist.debugOn):
                     debug_c = 1
                 else:
-                    debug_c = 300
+                    debug_c = 3
                 if((gvarlist.count % debug_c) == 0):
                     lg.info('Running trade for %s ... !' % (self.ticker))
                     lg.info("self.cur_price = {} <= (gvarlist.buy_p * self.prevPrice) = {} ... ".format(self.cur_price, (gvarlist.buy_p * self.prevPrice)))

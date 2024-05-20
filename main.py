@@ -32,9 +32,13 @@ def main():
     if(len(sys.argv) > 1):
         if("debug".lower() == sys.argv[1].lower()):
             print("DEBUG ON")
-            gvarlist.debugOn = True
+            gvarlist.debugOn = 1
             gvarlist.endTime = dt.time(23, 50)
 
+        if("test".lower() == sys.argv[1].lower()):
+            print("BACK TESTING ON")
+            gvarlist.debugOn = 2
+            # gvarlist.endTime = dt.time(23, 50)
 
     # initialize the logger (imported from logger)
     initialize_logger()

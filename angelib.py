@@ -122,9 +122,8 @@ def get_oder_status(orderID):
         
     return status
 
-def hist_data(ticker, exchange = "NSE"):
+def hist_data(ticker, duration = 10, exchange = "NSE"):
     interval = 'ONE_DAY'
-    duration = 10
     token = token_lookup(ticker, exchange)
     if token is None:
         lg.error("Not a VALID ticker")
@@ -146,9 +145,25 @@ def hist_data(ticker, exchange = "NSE"):
     df_data.index = df_data.index.tz_localize(None)
     return df_data
 
+def hist_data_intraday(ticker, datestamp, interval = 'ONE_MINUTE', exchange="NSE"):
+    params = {
+             "exchange" : exchange,
+             "symboltoken" : token_lookup(ticker, exchange),
+             "interval" : interval,
+             "fromdate" : datestamp.strftime("%Y-%m-%d") + " 09:15",
+             "todate" : datestamp.strftime("%Y-%m-%d") + " 15:30" 
+             }
+    hist_data = gvarlist.api.getCandleData(params)
+    df_data = pd.DataFrame(hist_data["data"],
+                           columns = ["date", "open", "high", "low", "close", "volume"])
+    df_data.set_index("date", inplace = True)
+    df_data.index = pd.to_datetime(df_data.index)
+    df_data.index = df_data.index.tz_localize(None)
+    return df_data
+
 def get_current_price(ticker, exchange = 'NSE'):
     # Only For Test/Debug
-    if(gvarlist.debugOn):
+    if(gvarlist.debugOn == 1):
         ltp = float(input("Enter LTP:\n"))
         return ltp
     # End Test
